@@ -34,7 +34,7 @@ const imageLinkInput = addCardForm.querySelector('.popup__input_type_url');
 
 
 // Функция открытия окна с изображением
-export function openImageModal(imageModal, image, title) {
+function openImageModal(image, title) {
     const popupImage = imageModal.querySelector('.popup__image');
     popupImage.src = image;
     popupImage.alt = title;
@@ -43,7 +43,7 @@ export function openImageModal(imageModal, image, title) {
 }
 
 // Функция обработки формы редактирования личной информации
-export function handleEditForm(evt, popup, name, job, nameInput, descriptionInput) {
+function handleEditForm(evt) {
     evt.preventDefault();
 
     // Подставляем новые значения на страницу
@@ -51,11 +51,11 @@ export function handleEditForm(evt, popup, name, job, nameInput, descriptionInpu
     job.textContent = descriptionInput.value;
 
     // Закрываем окно
-    closePopup(popup);
+    closePopup(editModal);
 }
 
 // Функция обработки формы добавления новых карточек
-export function handleFormAddCard(evt, popup, placesListElement, imageLinkInput, placeNameInput, imageModal, createCard, deleteCard, handleLikeButton, openImageModal, cardTemplate) {
+function handleFormAddCard(evt) {
     evt.preventDefault();
 
     // Создаем новую карточку
@@ -63,14 +63,16 @@ export function handleFormAddCard(evt, popup, placesListElement, imageLinkInput,
         cardTemplate,
         imageLinkInput.value, 
         placeNameInput.value,
-        (image, title) => openImageModal(imageModal, image, title)
+        deleteCard, 
+        handleLikeButton, 
+        (image, title) => openImageModal(image, title)
     );
 
     //Добавляем карточку в начало списка
     placesListElement.prepend(newCard);
 
     //Закрываем окно
-    closePopup(popup);
+    closePopup(addModal);
 
     //Очистка полей формы
     evt.target.reset();
@@ -85,8 +87,10 @@ initialCards.forEach(item => {
         createCard(
             cardTemplate, 
             item.link, 
-            item.name, 
-            (image, title) => openImageModal(imageModal, image, title)
+            item.name,
+            deleteCard, 
+            handleLikeButton, 
+            (image, title) => openImageModal(image, title)
         )
     );    
 });
@@ -105,11 +109,11 @@ popups.forEach((popup) => {
     });
 
     //По оверлею
-    popup.addEventListener('mousedown', (event) => {
-        handleOverlayClick(event);
+    popup.addEventListener('mousedown', (evt) => {
+        handleOverlayClick(evt);
 
         // Очищаем форму, если это попап добавления карточки
-        if (popup.classList.contains('popup_type_new-card')) {
+        if (popup.classList.contains('popup_type_new-card') && !popup.classList.contains('popup_is-opened')) {
             addCardForm.reset();
         }
     });
@@ -128,21 +132,7 @@ addButton.addEventListener('click', () => {
 });
 
 // Обработка формы редактирования личной информации
-editProfileForm.addEventListener('submit', (evt) => handleEditForm(evt, editModal, name, job, nameInput, descriptionInput)); 
+editProfileForm.addEventListener('submit', (evt) => handleEditForm(evt)); 
 
 // Обработка формы добавления карточек
-addCardForm.addEventListener('submit', (evt) => 
-    handleFormAddCard(
-        evt,
-        addModal,
-        placesListElement,  
-        imageLinkInput, 
-        placeNameInput,
-        imageModal,
-        createCard,
-        deleteCard,
-        handleLikeButton,
-        openImageModal,
-        cardTemplate
-    )
-); 
+addCardForm.addEventListener('submit', (evt) => handleFormAddCard(evt)); 

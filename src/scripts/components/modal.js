@@ -15,8 +15,8 @@ export function closePopup(popup) {
 }
 
 // Функция для закрытия окна по нажатию Esc
-function handleEscClose(event) {
-    if (event.key === 'Escape') {
+function handleEscClose(evt) {
+    if (evt.key === 'Escape') {
         const openedPopup = document.querySelector('.popup_is-opened');
         if (openedPopup) {
             closePopup(openedPopup);
@@ -24,8 +24,8 @@ function handleEscClose(event) {
     }
 }
 
-export function handleOverlayClick(event) {
-    if (!event.target.closest('.popup__content')) {
-        closePopup(event.currentTarget);
+export function handleOverlayClick(evt) {
+    if (!evt.target.closest('.popup__content')) {
+        closePopup(evt.currentTarget);
     }
 }

@@ -1,5 +1,5 @@
 // Функция создания карточки
-export function createCard(cardTemplate, image, title, handleCardClick) {
+export function createCard(cardTemplate, image, title, deleteCard, handleLikeButton, handleCardClick) {
     const cardElement = cardTemplate.querySelector('.card').cloneNode(true); // карточка
     const cardImage = cardElement.querySelector('.card__image'); // картинка
     const buttonLike = cardElement.querySelector('.card__like-button');  // кнопка лайка
@@ -22,8 +22,8 @@ export function createCard(cardTemplate, image, title, handleCardClick) {
 };
 
 // Функция обработки кнопки лайка
-export function handleLikeButton(event) {
-    event.target.classList.toggle('card__like-button_is-active');
+export function handleLikeButton(evt) {
+    evt.target.classList.toggle('card__like-button_is-active');
 };
 
 // Функция удаления карточки
