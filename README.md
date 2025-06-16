@@ -1,3 +1,3 @@
 # Проектная работа Mesto
- https://LyashenA.github.io/mesto-project-ff
+ https://lyashena.github.io/mesto-project-ff/
  
