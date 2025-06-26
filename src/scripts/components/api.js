@@ -6,18 +6,16 @@ const config = {
   }
 };
 
+function checkRes(res) {
+    return res.ok ? res.json() : Promise.reject(`Ошибка: ${res.status}`);
+}
+
 // Запрос на личную информацию
 export const getUserInfo = () => {
     return fetch(`${config.baseUrl}/users/me`, {
         headers: config.headers
     })
-        .then(res => {
-            if (res.ok) {
-                return res.json();
-            }
-
-            return Promise.reject(`Ошибка: ${res.status}`);
-        });
+        .then(checkRes);
 };
 
 // Запрос на карточки
@@ -25,15 +23,10 @@ export const getInitialCards = () => {
     return fetch(`${config.baseUrl}/cards`, {
         headers: config.headers
     })
-        .then(res => {
-            if (res.ok) {
-                return res.json();
-            }
-
-            return Promise.reject(`Ошибка: ${res.status}`);
-        });
+        .then(checkRes);
 };
 
+// Запрос на изменение личных данных
 export const editUserProfile = (name, about) => {
     return fetch(`${config.baseUrl}/users/me`, {
         method: 'PATCH',
@@ -43,15 +36,10 @@ export const editUserProfile = (name, about) => {
             about
         })
     })
-        .then(res => {
-            if (res.ok) {
-                return res.json();
-            }
-
-            return Promise.reject(`Ошибка: ${res.status}`);
-        });
+        .then(checkRes);
 };
 
+// Запрос на создание новой карточки
 export const addNewCard = (name, link) => {
     return fetch(`${config.baseUrl}/cards`, {
         method: 'POST',
@@ -61,10 +49,44 @@ export const addNewCard = (name, link) => {
             link
         })
     })
-        .then(res => {
-            if (res.ok) {
-                return res.json();
-            }
-            return Promise.reject(`Ошибка: ${res.status}`);
-        });
+        .then(checkRes);
 };
+
+// Запрос на удаление карточки с сервера
+export const deleteCardFromServer = (cardId) => {
+    return fetch(`${config.baseUrl}/cards/${cardId}`, {
+        method: 'DELETE',
+        headers: config.headers
+    })
+        .then(checkRes);
+};
+
+// Запрос на постановку лайка
+export const putLike = (cardId) => {
+    return fetch(`${config.baseUrl}/cards/likes/${cardId}`, {
+        method: 'PUT',
+        headers: config.headers
+    })
+        .then(checkRes);
+};
+
+// Запрос на снятие лайка
+export const deleteLike = (cardId) => {
+    return fetch(`${config.baseUrl}/cards/likes/${cardId}`, {
+        method: 'DELETE',
+        headers: config.headers
+    })
+        .then(checkRes);
+};
+
+// Запрос на смену аватара
+export const changeAvatar = (avatarLink) => {
+    return fetch(`${config.baseUrl}/users/me/avatar`, {
+        method: 'PATCH',
+        heafers: config.headers,
+        body: JSON.stringify({
+            avatar: avatarLink
+        })
+    })
+        .then(checkRes);
+}

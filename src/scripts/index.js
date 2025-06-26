@@ -3,7 +3,15 @@ import { initialCards } from './cards.js';
 import { createCard, handleLikeButton, deleteCard } from './components/card.js';
 import { openPopup, closePopup, handleOverlayClick } from './components/modal.js';
 import { enableValidation, clearValidation } from './components/validation.js';
-import { getUserInfo, getInitialCards, editUserProfile, addNewCard } from './components/api.js';
+import { 
+    getUserInfo, 
+    getInitialCards, 
+    editUserProfile, 
+    addNewCard, 
+    putLike, 
+    deleteLike, 
+    deleteCardFromServer 
+} from './components/api.js';
 
 const cardTemplate = document.querySelector('#card-template').content; // Темплейт карточки
 const placesListElement = document.querySelector('.places__list'); // Список карточек
@@ -34,7 +42,7 @@ const avatar = document.querySelector('.profile__image');
 const addCardForm = addModal.querySelector('.popup__form'); //форма добавления карточек
 const placeNameInput = addCardForm.querySelector('.popup__input_type_card-name');
 const imageLinkInput = addCardForm.querySelector('.popup__input_type_url');
-let totalLikes; // число лайков на карточке
+let userId;
 
 //Объект с настройками валидации
 const validationConfig = {
@@ -94,14 +102,11 @@ function handleFormAddCard(evt) {
         // Если запрос выполнен успешно
         .then(data => {
             // Создаем новую карточку
-            const newCard = createCard(
-                cardTemplate,
-                data.link, 
-                data.name,
-                deleteCard, 
-                handleLikeButton, 
-                (image, title) => openImageModal(image, title)
-            );
+            const newCard = createCard(cardTemplate, data, userId, {
+                    onLike: onLikeApi,
+                    onDelete: onDeleteApi,
+                    onPreview: openImageModal
+                    });
 
             //Добавляем карточку в начало списка
             placesListElement.prepend(newCard);
@@ -115,10 +120,21 @@ function handleFormAddCard(evt) {
         .catch(err => console.log(err));
 }
 
+// Колбэк для лайка
+function onLikeApi(cardId, isLiked) {
+    const request = isLiked ? deleteLike(cardId) : putLike(cardId);
+    return request; // Вернет промис с новым объектом карточки
+}
+
+// Колбэк для удаления карточки
+function onDeleteApi(cardId) {
+    return deleteCardFromServer(cardId);
+}
+
 Promise.all([getUserInfo(), getInitialCards()])
     .then(([userData, cards]) => {
         // Сохраняем userID
-        const userID = userData._id;
+        userId = userData._id;
 
         // Вставляем на страницу имя, описание и аватар
         name.textContent = userData.name;
@@ -127,17 +143,12 @@ Promise.all([getUserInfo(), getInitialCards()])
         
         // Вывести карточки на страницу
         cards.forEach(cardData => {
-            totalLikes = cardData.likes.length;
             placesListElement.append(
-                createCard(
-                cardTemplate, 
-                cardData.link, 
-                cardData.name,
-                totalLikes,
-                deleteCard, 
-                handleLikeButton, 
-                (image, title) => openImageModal(image, title)
-                )
+                createCard(cardTemplate, cardData, userId, {
+                    onLike: onLikeApi,
+                    onDelete: onDeleteApi,
+                    onPreview: openImageModal
+                })
             );    
         });
     })
