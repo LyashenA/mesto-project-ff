@@ -1,13 +1,15 @@
 // Функция создания карточки
-export function createCard(cardTemplate, image, title, deleteCard, handleLikeButton, handleCardClick) {
+export function createCard(cardTemplate, image, title, totalLikes, deleteCard, handleLikeButton, handleCardClick) {
     const cardElement = cardTemplate.querySelector('.card').cloneNode(true); // карточка
     const cardImage = cardElement.querySelector('.card__image'); // картинка
     const buttonLike = cardElement.querySelector('.card__like-button');  // кнопка лайка
+    const likeCounter = cardElement.querySelector('.card__like-counter'); // строка с числом лайков
     
     // Заполнение карточки
     cardImage.src = image;
     cardImage.alt = title;
     cardElement.querySelector('.card__title').textContent = title;
+    likeCounter.textContent = totalLikes;
 
     // Обработчик кнопки лайка
     buttonLike.addEventListener('click', handleLikeButton);
