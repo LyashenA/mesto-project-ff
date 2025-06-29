@@ -1,0 +1,23 @@
+.profile__edit-avatar {
+    background-color: rgba(0, 0, 0, 0.8);
+    block-size: 100%;
+    inline-size: 100%;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    cursor: pointer;
+}
+
+.profile__image:hover .profile__edit-avatar {
+  opacity: 1;
+}
+
+.edit-icon {
+  width: 26px;
+  height: 26px;
+  fill: white;
+}

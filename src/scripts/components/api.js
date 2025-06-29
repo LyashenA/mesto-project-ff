@@ -83,7 +83,7 @@ export const deleteLike = (cardId) => {
 export const changeAvatar = (avatarLink) => {
     return fetch(`${config.baseUrl}/users/me/avatar`, {
         method: 'PATCH',
-        heafers: config.headers,
+        headers: config.headers,
         body: JSON.stringify({
             avatar: avatarLink
         })

@@ -30,8 +30,8 @@ export function createCard(cardTemplate, cardData, userId, handlers) {
 
     // Обработчик кнопки удаления карточки
     if (deleteButton) {
-        deleteButton.addEventListener('click', () => 
-            deleteCard(cardData._id, cardElement, handlers.onDelete)
+        deleteButton.addEventListener('click', () =>
+            handlers.onAskDelete(cardData._id, cardElement) 
         );
     }
 
@@ -44,7 +44,7 @@ export function createCard(cardTemplate, cardData, userId, handlers) {
 };
 
 // Функция обработки кнопки лайка
-export function handleLikeButton(cardId, buttonLike, likeCounter, onLike) {
+function handleLikeButton(cardId, buttonLike, likeCounter, onLike) {
     const isLikedNow = buttonLike.classList.contains('card__like-button_is-active');
 
     // Вызываем колбэк, который пришел из index.js
@@ -60,7 +60,6 @@ export function handleLikeButton(cardId, buttonLike, likeCounter, onLike) {
 // Функция удаления карточки
 export function deleteCard(cardId, cardElement, onDelete) {
     // Вызываем колбэк, который пришел из index.js.
-    onDelete(cardId)
-        .then(() => cardElement.remove())
-        .catch(err => console.log(err));
+    return onDelete(cardId)
+        .then(() => cardElement.remove());
 };

@@ -1,6 +1,5 @@
 import '../pages/index.css';
-import { initialCards } from './cards.js';
-import { createCard, handleLikeButton, deleteCard } from './components/card.js';
+import { createCard, deleteCard } from './components/card.js';
 import { openPopup, closePopup, handleOverlayClick } from './components/modal.js';
 import { enableValidation, clearValidation } from './components/validation.js';
 import { 
@@ -10,7 +9,8 @@ import {
     addNewCard, 
     putLike, 
     deleteLike, 
-    deleteCardFromServer 
+    deleteCardFromServer,
+    changeAvatar 
 } from './components/api.js';
 
 const cardTemplate = document.querySelector('#card-template').content; // Темплейт карточки
@@ -44,6 +44,18 @@ const placeNameInput = addCardForm.querySelector('.popup__input_type_card-name')
 const imageLinkInput = addCardForm.querySelector('.popup__input_type_url');
 let userId;
 
+// Переменные для редактирования аватара пользователя
+const editAvatarButton = document.querySelector('.profile__edit-avatar');
+const newAvatarModal = document.querySelector('.popup_type_new-avatar');
+const newAvatarForm = newAvatarModal.querySelector('.popup__form');
+const newAvatarInput = newAvatarForm.querySelector('.popup__input_type_url');
+
+// Переменные окна подтверждения удаления
+const confirmModal = document.querySelector('.popup_type_confirm-delete');
+const confirmForm = confirmModal.querySelector('.popup__form');
+let cardToDeleteId = null;
+let cardToDeleteElement = null;
+
 //Объект с настройками валидации
 const validationConfig = {
     formSelector: '.popup__form',
@@ -73,6 +85,10 @@ function updateUserInfoOnPage(data) {
 function handleEditForm(evt) {
     evt.preventDefault();
 
+    // Показываем пользователю, что началась обработка формы
+    const button = evt.target.querySelector('.popup__button');
+    renderLoading(true, button);
+
     // Собираем новые данные с формы
     const newName = nameInput.value;
     const newDescription = descriptionInput.value;
@@ -86,12 +102,17 @@ function handleEditForm(evt) {
             // И закрываем окно
             closePopup(editModal);
         })
-        .catch(err => console.log(err));
+        .catch(err => console.log(err))
+        .finally(() => renderLoading(false, button));
 }
 
 // Функция обработки формы добавления новых карточек
 function handleFormAddCard(evt) {
     evt.preventDefault();
+
+    // Показываем пользователю, что началась обработка формы
+    const button = evt.target.querySelector('.popup__button');
+    renderLoading(true, button);
 
     // Собираем данные с формы
     const name = placeNameInput.value;
@@ -104,7 +125,7 @@ function handleFormAddCard(evt) {
             // Создаем новую карточку
             const newCard = createCard(cardTemplate, data, userId, {
                     onLike: onLikeApi,
-                    onDelete: onDeleteApi,
+                    onAskDelete: handleConfirmDelete,
                     onPreview: openImageModal
                     });
 
@@ -117,7 +138,47 @@ function handleFormAddCard(evt) {
             //Очистка полей формы
             evt.target.reset();
         })
-        .catch(err => console.log(err));
+        .catch(err => console.log(err))
+        .finally(() => renderLoading(false, button));
+}
+
+// Функция обработки формы смены аватара
+function handleChangeAvatarForm(evt) {
+    evt.preventDefault();
+
+    // Показываем пользователю, что началась обработка формы
+    const button = evt.target.querySelector('.popup__button');
+    renderLoading(true, button);
+
+    // Собираем данные с формы
+    const avatarUrl = newAvatarInput.value;
+
+    changeAvatar(avatarUrl)
+        .then(data => {
+            avatar.style.backgroundImage = `url(${data.avatar})`;
+            closePopup(newAvatarModal);
+            newAvatarForm.reset();
+        })
+        .catch(err => console.log(err))
+        .finally(() => renderLoading(false, button));
+}
+
+// Функция для обработки формы подтверждения удаления
+function submitConfirmForm(evt) {
+    evt.preventDefault();
+
+    // Показываем пользователю, что началась обработка формы
+    const button = evt.target.querySelector('.popup__button');
+    renderLoading(true, button, 'Да', 'Удаление...');
+
+    deleteCard(cardToDeleteId, cardToDeleteElement, onDeleteApi)
+        .then(() => closePopup(confirmModal))
+        .catch(err => console.log(err))
+        .finally(() => {
+            renderLoading(false, button, 'Да');
+            cardToDeleteId = null;
+            cardToDeleteElement = null;
+        });
 }
 
 // Колбэк для лайка
@@ -131,6 +192,27 @@ function onDeleteApi(cardId) {
     return deleteCardFromServer(cardId);
 }
 
+// Функция, которая покажет пользователю процесс загрузки
+function renderLoading(isLoading, button, defaultText = 'Сохранить', loadingText = 'Сохранение...') {
+    if (isLoading) {
+        button.textContent = loadingText;
+        button.disabled = true;
+    } 
+    else {
+        button.textContent = defaultText;
+        button.disabled = false;
+    }
+}
+
+// Функция открытия окна подтверждения удаления
+function handleConfirmDelete(cardId, cardElement) {
+    // Запоминаем, какую карточку надо удалить
+    cardToDeleteId = cardId;
+    cardToDeleteElement = cardElement;
+    // Открываем модалку подтверждения
+    openPopup(confirmModal);
+}
+
 Promise.all([getUserInfo(), getInitialCards()])
     .then(([userData, cards]) => {
         // Сохраняем userID
@@ -139,14 +221,14 @@ Promise.all([getUserInfo(), getInitialCards()])
         // Вставляем на страницу имя, описание и аватар
         name.textContent = userData.name;
         job.textContent = userData.about;
-        avatar.src = userData.avatar;
+        avatar.style.backgroundImage = `url(${userData.avatar})`;
         
         // Вывести карточки на страницу
         cards.forEach(cardData => {
             placesListElement.append(
                 createCard(cardTemplate, cardData, userId, {
                     onLike: onLikeApi,
-                    onDelete: onDeleteApi,
+                    onAskDelete: handleConfirmDelete,
                     onPreview: openImageModal
                 })
             );    
@@ -181,23 +263,29 @@ popups.forEach((popup) => {
     });
 });
 
-// Показываем модальное окно для редактирования личной информации
+// Клик по кнопке редактирования личной информации
 editButton.addEventListener('click', () => {
     nameInput.value = name.textContent;
     descriptionInput.value = job.textContent;
 
     // Очистка ошибок валидации
     clearValidation(editProfileForm, validationConfig);
-
+    // Открытие модалки
     openPopup(editModal); 
 });
 
-// Показываем модальное окно для добавления карточки
+// Клик по кнопке добавления карточки
 addButton.addEventListener('click', () => {
     // Очистка ошибок валидации
     clearValidation(addCardForm, validationConfig);
-
+    // Открытие модалки
     openPopup(addModal); 
+});
+
+// Клик по аватару
+editAvatarButton.addEventListener('click', () => {
+    clearValidation(newAvatarForm, validationConfig);
+    openPopup(newAvatarModal);
 });
 
 // Обработка формы редактирования личной информации
@@ -209,6 +297,16 @@ editProfileForm.addEventListener('submit', (evt) => {
 addCardForm.addEventListener('submit', (evt) => {
     handleFormAddCard(evt);
 }); 
+
+// Обработка формы смены аватара
+newAvatarForm.addEventListener('submit', (evt) => {
+    handleChangeAvatarForm(evt);
+});
+
+// Обработка формы подтверждения удаления
+confirmForm.addEventListener('submit', (evt) => {
+    submitConfirmForm(evt);
+});
 
 // Включение валидации форм
 enableValidation(validationConfig);
